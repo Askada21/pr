@@ -46,3 +46,28 @@ def test_zero_demand():
     )
 
     assert record.stock_coverage_days() is None
+
+@pytest.mark.parametrize(
+    "inventory_level, demand_forecast, expected_risk",
+    [
+        (10, 10.0, "High"),
+        (30, 10.0, "Medium"),
+        (100, 10.0, "Low"),
+        (100, 0.0, "Unknown"),
+    ]
+)
+def test_stockout_risk(
+    inventory_level,
+    demand_forecast,
+    expected_risk
+):
+    record = InventoryRecord(
+        date="2022-01-01",
+        product_id="P0001",
+        store_id="S001",
+        inventory_level=inventory_level,
+        units_sold=5,
+        demand_forecast=demand_forecast
+    )
+
+    assert record.stockout_risk() == expected_risk
