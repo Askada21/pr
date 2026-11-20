@@ -23,7 +23,21 @@ class InventoryRecord:
             return None
 
         return self.inventory_level / self.demand_forecast
+    
+    def stockout_risk(self) -> str:
+        coverage = self.stock_coverage_days()
 
+        if coverage is None:
+            return "Unknown"
+
+        if coverage < 2:
+            return "High"
+
+        if coverage < 5:
+            return "Medium"
+
+        return "Low"
+ 
     def __repr__(self):
         return (
             f"InventoryRecord("
