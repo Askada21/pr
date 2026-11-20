@@ -100,3 +100,39 @@ class InventoryService:
 
         finally:
             connection.close()
+
+    def get_replenishment_recommendations(
+        self,
+        date: str,
+        store_id: str,
+        lead_time_days: int = 3,
+        safety_stock_days: int = 2
+    ) -> list[dict]:
+
+        if lead_time_days < 0 or safety_stock_days < 0:
+            raise ValueError("Days cannot be negative")
+
+        records = self.get_high_risk_inventory(
+            date=date,
+            store_id=store_id
+        )
+
+        recommendations = []
+
+        for record in records:
+            order_quantity = record.recommended_order_quantity(
+                lead_time_days=lead_time_days,
+                safety_stock_days=safety_stock_days
+            )
+
+            recommendations.append({
+                "product_id": record.product_id,
+                "store_id": record.store_id,
+                "date": record.date,
+                "inventory_level": record.inventory_level,
+                "stock_coverage_days": record.stock_coverage_days(),
+                "stockout_risk": record.stockout_risk(),
+                "recommended_order": order_quantity
+            })
+
+        return recommendations
