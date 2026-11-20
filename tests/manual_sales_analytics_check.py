@@ -27,3 +27,23 @@ if not category_df.empty:
         "Top-performing category:",
         category_df.iloc[0]["category_name"]
     )
+
+print("\nMonthly Sales Trends:")
+
+monthly_df = analytics.get_monthly_sales_trends()
+
+print(monthly_df.head(12))
+
+print("\nTotal months:", len(monthly_df))
+
+assert monthly_df["month"].is_monotonic_increasing
+print("Monthly dates are correctly sorted!")
+
+if not monthly_df.empty:
+    print(
+        "Highest revenue month:",
+        monthly_df.loc[
+            monthly_df["estimated_revenue"].idxmax(),
+            "month"
+        ]
+    )
