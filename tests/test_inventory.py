@@ -1,8 +1,9 @@
+
 import pytest
 from models.inventory import InventoryRecord
 
 
-@pytest.fixture #creates a test object that can be reused in multiple tests.
+@pytest.fixture
 def sample_inventory():
     return InventoryRecord(
         date="2022-01-01",
@@ -47,6 +48,7 @@ def test_zero_demand():
 
     assert record.stock_coverage_days() is None
 
+
 @pytest.mark.parametrize(
     "inventory_level, demand_forecast, expected_risk",
     [
@@ -71,3 +73,44 @@ def test_stockout_risk(
     )
 
     assert record.stockout_risk() == expected_risk
+
+
+@pytest.mark.parametrize(
+    "inventory_level, demand_forecast, expected",
+    [
+        (150, 100.0, 350),
+        (600, 100.0, 0),
+        (0, 10.0, 50),
+        (100, 0.0, 0),
+        (100, 10.1, 0),
+    ]
+)
+def test_recommended_order_quantity(
+    inventory_level,
+    demand_forecast,
+    expected
+):
+    record = InventoryRecord(
+        date="2022-01-01",
+        product_id="P0001",
+        store_id="S001",
+        inventory_level=inventory_level,
+        units_sold=5,
+        demand_forecast=demand_forecast
+    )
+
+    assert record.recommended_order_quantity() == expected
+
+
+def test_negative_lead_time():
+    record = InventoryRecord(
+        date="2022-01-01",
+        product_id="P0001",
+        store_id="S001",
+        inventory_level=100,
+        units_sold=5,
+        demand_forecast=10.0
+    )
+
+    with pytest.raises(ValueError):
+        record.recommended_order_quantity(lead_time_days=-1)
