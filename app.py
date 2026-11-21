@@ -116,3 +116,63 @@ with st.expander("View Sales Data"):
 
     st.write("Monthly Sales Trends")
     st.dataframe(monthly_df, width="stretch")
+
+# Inventory Risk Dashboard
+st.divider()
+st.subheader("Inventory Risk Analysis")
+
+st.write(
+    "Identify products at risk of running out of stock "
+    "and review replenishment recommendations."
+)
+
+store_id = st.selectbox(
+    "Select Store",
+    options=["S001", "S002", "S003", "S004", "S005"]
+)
+
+selected_date = st.date_input(
+    "Select Date",
+    value=pd.to_datetime("2022-01-01").date(),
+    min_value=pd.to_datetime("2022-01-01").date(),
+    max_value=pd.to_datetime("2023-12-31").date()
+)
+
+if st.button("Analyse Inventory"):
+    from services.inventory_service import InventoryService
+
+    inventory_service = InventoryService()
+
+    try:
+        recommendations = (
+            inventory_service.get_replenishment_recommendations(
+                date=str(selected_date),
+                store_id=store_id
+            )
+        )
+
+        if recommendations:
+            risk_df = pd.DataFrame(recommendations)
+
+            st.metric(
+                "High-Risk Products",
+                len(risk_df)
+            )
+
+            st.dataframe(
+                risk_df,
+                width="stretch"
+            )
+
+        else:
+            st.success(
+                "No high-risk products found "
+                "for this store and date."
+            )
+
+    except Exception:
+        st.error(
+            "Unable to analyse inventory. "
+            "Please check the database connection."
+        )
+
