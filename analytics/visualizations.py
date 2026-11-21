@@ -101,3 +101,29 @@ def plot_stock_coverage_by_store(df: pd.DataFrame):
     )
 
     return fig
+
+def plot_low_stock_rate_by_store(df: pd.DataFrame):
+    fig = px.bar(
+        df,
+        x="store_id",
+        y="low_stock_rate_pct",
+        title="Low Stock Rate by Store",
+        labels={
+            "store_id": "Store",
+            "low_stock_rate_pct": "Low Stock Rate (%)"
+        },
+        text="low_stock_rate_pct"
+    )
+
+    fig.update_traces(
+        texttemplate="%{text:.2f}%",
+        textposition="outside"
+    )
+
+    fig.update_layout(
+        template="plotly_white",
+        yaxis_title="Low Stock Rate (%)",
+        yaxis_range=[0, 100]
+    )
+
+    return fig
