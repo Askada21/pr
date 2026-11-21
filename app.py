@@ -1,10 +1,15 @@
 import streamlit as st
 
+from assets.theme import load_custom_css
+
 st.set_page_config(
     page_title="Smart Inventory System",
     page_icon="📦",
     layout="wide"
 )
+
+load_custom_css()
+
 
 st.title("Smart Inventory Management System")
 

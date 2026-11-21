@@ -1,12 +1,15 @@
 import pandas as pd
 import streamlit as st
 
+from assets.theme import load_custom_css
 from analytics.sales_analytics import SalesAnalytics
 from analytics.visualizations import (
     plot_revenue_by_store,
     plot_revenue_by_category,
     plot_monthly_sales_trends
 )
+
+load_custom_css()
 
 st.title("Sales Analytics")
 st.caption("Revenue Performance & Sales Trends")
@@ -43,7 +46,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(
         "Estimated Revenue",
-        f"{total_revenue:,.2f}"
+        f"{total_revenue / 1_000_000:,.2f}M"
     )
 
 with col2:

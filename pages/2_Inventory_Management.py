@@ -2,6 +2,9 @@ import pandas as pd
 import streamlit as st
 
 from services.inventory_service import InventoryService
+from assets.theme import load_custom_css
+
+load_custom_css()
 
 st.title("Inventory Management")
 st.caption("Stockout Risk & Replenishment Planning")
