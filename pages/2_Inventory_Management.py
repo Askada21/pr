@@ -3,6 +3,8 @@ import streamlit as st
 
 from services.inventory_service import InventoryService
 from assets.theme import load_custom_css
+from analytics.inventory_analytics import InventoryAnalytics
+from analytics.visualizations import plot_stock_coverage_by_store
 
 load_custom_css()
 
@@ -108,3 +110,76 @@ if st.button("Generate Replenishment Plan"):
 
     except Exception:
         st.error("Unable to generate replenishment plan.")
+
+# Inventory Performance Analytics
+st.divider()
+st.subheader("Inventory Performance")
+
+st.caption(
+    "Historical average stock coverage across all "
+    "available dates and products."
+)
+
+
+@st.cache_data(ttl=300)
+def load_inventory_analytics():
+    analytics = InventoryAnalytics()
+    return analytics.get_stock_coverage_by_store()
+
+
+try:
+    coverage_df = load_inventory_analytics()
+
+    if not coverage_df.empty:
+        # KPI calculations
+        stores_analysed = coverage_df["store_id"].nunique()
+
+        avg_coverage = coverage_df[
+            "avg_stock_coverage_days"
+        ].mean()
+
+        lowest_coverage_store = coverage_df.iloc[0]["store_id"]
+
+        # KPI cards
+        kpi1, kpi2, kpi3 = st.columns(3)
+
+        with kpi1:
+            st.metric("Stores Analysed", stores_analysed)
+
+        with kpi2:
+            st.metric(
+                "Average Coverage",
+                f"{avg_coverage:.2f} days"
+            )
+
+        with kpi3:
+            st.metric(
+                "Lowest Coverage Store",
+                lowest_coverage_store
+            )
+
+        # Plotly chart
+        coverage_fig = plot_stock_coverage_by_store(
+            coverage_df
+        )
+
+        st.plotly_chart(
+            coverage_fig,
+            width="stretch"
+        )
+
+        # Data table
+        with st.expander("View Coverage Data"):
+            st.dataframe(
+                coverage_df,
+                width="stretch",
+                hide_index=True
+            )
+
+    else:
+        st.info("No inventory coverage data available.")
+
+except Exception:
+    st.error(
+        "Unable to load inventory performance data."
+    )
