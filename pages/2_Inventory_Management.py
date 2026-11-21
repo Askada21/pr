@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import streamlit as st
 
@@ -7,6 +8,7 @@ from analytics.inventory_analytics import InventoryAnalytics
 from analytics.visualizations import plot_stock_coverage_by_store
 from analytics.visualizations import plot_low_stock_rate_by_store
 
+logger = logging.getLogger(__name__)
 load_custom_css()
 
 st.title("Inventory Management")
@@ -241,4 +243,8 @@ try:
         st.info("No inventory data available.")
 
 except Exception:
-    st.error("Unable to load low stock analytics.")
+    logger.exception("Failed to generate replenishment plan")
+    st.error(
+        "Unable to generate replenishment plan. "
+        "Please check the database connection or try again."
+    )
