@@ -47,3 +47,47 @@ class InventoryAnalytics:
 
         finally:
             connection.close()
+
+    def get_stockout_rate_by_store(self) -> pd.DataFrame:
+        connection = get_connection()
+
+        try:
+            query = """
+                select
+                    store_id,
+                    count(*) as total_records,
+                    count(*) filter (
+                        where inventory_level = 0
+                    ) as zero_stock_records,
+                    round(
+                        100.0 * count(*) filter (
+                            where inventory_level = 0
+                        ) / nullif(count(*), 0),
+                        2
+                    ) as zero_stock_rate_pct
+                from daily_inventory
+                group by store_id
+                order by zero_stock_rate_pct desc
+            """
+
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+
+                rows = cursor.fetchall()
+                columns = [
+                    description[0]
+                    for description in cursor.description
+                ]
+
+            df = pd.DataFrame(rows, columns=columns)
+
+            if not df.empty:
+                df["zero_stock_rate_pct"] = pd.to_numeric(
+                    df["zero_stock_rate_pct"]
+                )
+
+            return df
+
+        finally:
+            connection.close()
+
