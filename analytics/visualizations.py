@@ -75,3 +75,29 @@ def plot_monthly_sales_trends(df: pd.DataFrame):
     )
 
     return fig
+
+def plot_stock_coverage_by_store(df: pd.DataFrame):
+    fig = px.bar(
+        df,
+        x="store_id",
+        y="avg_stock_coverage_days",
+        title="Average Stock Coverage by Store",
+        labels={
+            "store_id": "Store",
+            "avg_stock_coverage_days": "Coverage (days)"
+        },
+        text="avg_stock_coverage_days"
+    )
+
+    fig.update_traces(
+        texttemplate="%{text:.2f}",
+        textposition="outside"
+    )
+
+    fig.update_layout(
+        template="plotly_white",
+        xaxis_title="Store",
+        yaxis_title="Average Stock Coverage (days)"
+    )
+
+    return fig
