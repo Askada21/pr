@@ -117,62 +117,135 @@ with st.expander("View Sales Data"):
     st.write("Monthly Sales Trends")
     st.dataframe(monthly_df, width="stretch")
 
-# Inventory Risk Dashboard
+# Inventory Risk & Replenishment Dashboard
+from services.inventory_service import InventoryService
+
 st.divider()
-st.subheader("Inventory Risk Analysis")
+st.subheader("Inventory Risk & Replenishment")
 
 st.write(
-    "Identify products at risk of running out of stock "
-    "and review replenishment recommendations."
+    "Identify high-risk products and calculate "
+    "recommended replenishment quantities."
 )
 
-store_id = st.selectbox(
-    "Select Store",
-    options=["S001", "S002", "S003", "S004", "S005"]
-)
+# Store and date filters
+col1, col2 = st.columns(2)
 
-selected_date = st.date_input(
-    "Select Date",
-    value=pd.to_datetime("2022-01-01").date(),
-    min_value=pd.to_datetime("2022-01-01").date(),
-    max_value=pd.to_datetime("2023-12-31").date()
-)
+with col1:
+    store_id = st.selectbox(
+        "Select Store",
+        options=["S001", "S002", "S003", "S004", "S005"]
+    )
 
-if st.button("Analyse Inventory"):
-    from services.inventory_service import InventoryService
+with col2:
+    selected_date = st.date_input(
+        "Select Date",
+        value=pd.to_datetime("2022-01-01").date(),
+        min_value=pd.to_datetime("2022-01-01").date(),
+        max_value=pd.to_datetime("2023-12-31").date()
+    )
 
+# Replenishment settings
+st.markdown("#### Replenishment Settings")
+
+col3, col4 = st.columns(2)
+
+with col3:
+    lead_time_days = st.number_input(
+        "Lead Time (days)",
+        min_value=0,
+        max_value=30,
+        value=3,
+        step=1
+    )
+
+with col4:
+    safety_stock_days = st.number_input(
+        "Safety Stock (days)",
+        min_value=0,
+        max_value=30,
+        value=2,
+        step=1
+    )
+
+# Run analysis
+if st.button("Generate Replenishment Plan"):
     inventory_service = InventoryService()
 
     try:
         recommendations = (
             inventory_service.get_replenishment_recommendations(
                 date=str(selected_date),
-                store_id=store_id
+                store_id=store_id,
+                lead_time_days=int(lead_time_days),
+                safety_stock_days=int(safety_stock_days)
             )
         )
 
         if recommendations:
             risk_df = pd.DataFrame(recommendations)
 
-            st.metric(
-                "High-Risk Products",
-                len(risk_df)
+            # Summary metrics
+            high_risk_count = len(risk_df)
+
+            total_order_quantity = int(
+                risk_df["recommended_order"].sum()
             )
+
+            avg_coverage = risk_df[
+                "stock_coverage_days"
+            ].mean()
+
+            metric1, metric2, metric3 = st.columns(3)
+
+            with metric1:
+                st.metric(
+                    "High-Risk Products",
+                    high_risk_count
+                )
+
+            with metric2:
+                st.metric(
+                    "Recommended Units to Order",
+                    f"{total_order_quantity:,}"
+                )
+
+            with metric3:
+                st.metric(
+                    "Average Stock Coverage",
+                    f"{avg_coverage:.2f} days"
+                )
+
+            # Replenishment table
+            st.markdown("#### Replenishment Recommendations")
 
             st.dataframe(
                 risk_df,
-                width="stretch"
+                width="stretch",
+                hide_index=True
+            )
+
+            # CSV export
+            csv_data = risk_df.to_csv(index=False)
+
+            st.download_button(
+                label="Download Replenishment Plan (CSV)",
+                data=csv_data,
+                file_name=(
+                    f"replenishment_{store_id}_"
+                    f"{selected_date}.csv"
+                ),
+                mime="text/csv"
             )
 
         else:
             st.success(
                 "No high-risk products found "
-                "for this store and date."
+                "for the selected store and date."
             )
 
     except Exception:
         st.error(
-            "Unable to analyse inventory. "
+            "Unable to generate replenishment plan. "
             "Please check the database connection."
         )
-
