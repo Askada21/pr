@@ -2,6 +2,7 @@ import pandas as pd
 
 from database.connection import get_connection
 
+
 class SalesAnalytics:
 
     def get_revenue_by_store(self) -> pd.DataFrame:
@@ -26,15 +27,9 @@ class SalesAnalytics:
 
                 rows = cursor.fetchall()
 
-                columns = [
-                    description[0]
-                    for description in cursor.description
-                ]
+                columns = [description[0] for description in cursor.description]
 
-            return pd.DataFrame(
-                rows,
-                columns=columns
-            )
+            return pd.DataFrame(rows, columns=columns)
 
         finally:
             connection.close()
@@ -63,10 +58,7 @@ class SalesAnalytics:
 
                 rows = cursor.fetchall()
 
-                columns = [
-                    description[0]
-                    for description in cursor.description
-                ]
+                columns = [description[0] for description in cursor.description]
 
             return pd.DataFrame(rows, columns=columns)
 
@@ -81,13 +73,15 @@ class SalesAnalytics:
                 select
                     date_trunc('month', date)::date as month,
                     sum(units_sold) as total_units_sold,
-                    round(
-                        sum(units_sold * price),
-                        2
-                    ) as estimated_revenue
+                    round(sum(units_sold * price), 2) as estimated_revenue
                 from daily_inventory
                 group by date_trunc('month', date)
-                order by month
+                having count(distinct date) = extract(
+                    day from (
+                        date_trunc('month', date) + interval '1 month - 1 day'
+                    )
+                )
+                order by month;
             """
 
             with connection.cursor() as cursor:
@@ -95,18 +89,13 @@ class SalesAnalytics:
 
                 rows = cursor.fetchall()
 
-                columns = [
-                    description[0]
-                    for description in cursor.description
-                ]
+                columns = [description[0] for description in cursor.description]
 
             df = pd.DataFrame(rows, columns=columns)
 
             if not df.empty:
                 df["month"] = pd.to_datetime(df["month"])
-                df["estimated_revenue"] = pd.to_numeric(
-                    df["estimated_revenue"]
-                )
+                df["estimated_revenue"] = pd.to_numeric(df["estimated_revenue"])
 
             return df
 
