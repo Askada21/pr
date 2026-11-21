@@ -5,6 +5,7 @@ from services.inventory_service import InventoryService
 from assets.theme import load_custom_css
 from analytics.inventory_analytics import InventoryAnalytics
 from analytics.visualizations import plot_stock_coverage_by_store
+from analytics.visualizations import plot_low_stock_rate_by_store
 
 load_custom_css()
 
@@ -120,12 +121,10 @@ st.caption(
     "available dates and products."
 )
 
-
 @st.cache_data(ttl=300)
 def load_inventory_analytics():
     analytics = InventoryAnalytics()
     return analytics.get_stock_coverage_by_store()
-
 
 try:
     coverage_df = load_inventory_analytics()
@@ -183,3 +182,63 @@ except Exception:
     st.error(
         "Unable to load inventory performance data."
     )
+
+# Low Stock Analysis
+st.divider()
+st.subheader("Low Stock Analysis")
+
+threshold = st.number_input(
+    "Low Stock Threshold (units)",
+    min_value=0,
+    max_value=500,
+    value=50,
+    step=10
+)
+
+try:
+    analytics = InventoryAnalytics()
+
+    low_stock_df = analytics.get_low_stock_rate_by_store(
+        threshold=int(threshold)
+    )
+
+    if not low_stock_df.empty:
+        total_low_stock = low_stock_df[
+            "low_stock_records"
+        ].sum()
+
+        overall_rate = (
+            100 * total_low_stock
+            / low_stock_df["total_records"].sum()
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric(
+                "Low Stock Observations",
+                f"{total_low_stock:,}"
+            )
+
+        with col2:
+            st.metric(
+                "Overall Low Stock Rate",
+                f"{overall_rate:.2f}%"
+            )
+
+        fig = plot_low_stock_rate_by_store(low_stock_df)
+
+        st.plotly_chart(fig, width="stretch")
+
+        with st.expander("View Low Stock Data"):
+            st.dataframe(
+                low_stock_df,
+                width="stretch",
+                hide_index=True
+            )
+
+    else:
+        st.info("No inventory data available.")
+
+except Exception:
+    st.error("Unable to load low stock analytics.")
