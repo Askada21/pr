@@ -1,0 +1,59 @@
+/* Smart Inventory Dashboard Theme */
+:root {
+    --primary: #172b4d;
+    --accent: #2f7d72;
+    --background: #f5f7fb;
+    --border: #e2e8f0;
+}
+
+/* Main application background */
+.stApp {
+    background-color: var(--background);
+}
+
+/* Main content spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 1400px;
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: var(--primary);
+    letter-spacing: -0.02em;
+}
+
+/* KPI cards */
+div[data-testid="stMetric"] {
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* KPI values */
+div[data-testid="stMetricValue"] {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #ffffff;
+    border-right: 1px solid var(--border);
+}
+
+/* Buttons */
+.stButton > button[kind="primary"] {
+    background-color: var(--accent);
+    color: #ffffff;
+    border-radius: 8px;
+    border: none;
+}
+
+/* Dataframes */
+div[data-testid="stDataFrame"] {
+    border-radius: 10px;
+    overflow: hidden;
+}
